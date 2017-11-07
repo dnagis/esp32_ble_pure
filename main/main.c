@@ -40,7 +40,7 @@
 
 #define GATTC_TAG "GATTC_DEMO"
 //#define REMOTE_SERVICE_UUID        0x00FF
-#define REMOTE_SERVICE_UUID        0x180F
+#define REMOTE_SERVICE_UUID        0x180D //HR_UUID = '0000180d-0000-1000-8000-00805f9b34fb' dans example-gatt-server
 #define REMOTE_NOTIFY_CHAR_UUID    0xFF01
 #define PROFILE_NUM      1
 #define PROFILE_A_APP_ID 0
