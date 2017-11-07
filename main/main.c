@@ -16,6 +16,20 @@
 
 /****************************************************************************
 *
+* Client esp32. De l'autre côté: bluez, test/example-gatt-server (penser aux autorisations
+* name = dbus.service.BusName("laroque.gatts", bus) avant mainloop.run()
+* 
+* Pour matcher service et characteristic il faut:
+* -adapter REMOTE_SERVICE_UUID qui doit correspondre à une décla de service dans bluez/test/example-gatt-server
+* -adapter REMOTE_NOTIFY_CHAR_UUID --> characteristique du service ...
+* -dans l'initiation de la characteristique il faut ajouter dans la table: 'notify'
+* 
+* 
+* L'envoi lui même se passe dans case ESP_GATTC_WRITE_DESCR_EVT
+* 
+* 
+* 
+* 
 * This file is for gatt client. It can scan ble device, connect one device.
 * Run the gatt_server demo, the client demo will automatically connect to the gatt_server demo.
 * Client demo will enable gatt_server's notify after connection. Then the two devices will exchange
@@ -40,8 +54,9 @@
 
 #define GATTC_TAG "GATTC_DEMO"
 //#define REMOTE_SERVICE_UUID        0x00FF
-#define REMOTE_SERVICE_UUID        0x180D //HR_UUID = '0000180d-0000-1000-8000-00805f9b34fb' dans example-gatt-server
-#define REMOTE_NOTIFY_CHAR_UUID    0xFF01
+#define REMOTE_SERVICE_UUID        0x1810 //j'y arrive pas avec dans example-gatt-server TEST_SVC_UUID = '12345678-1234-5678-1234-56789abcdef0', donc je TEST_SVC_UUID = '1810'
+//#define REMOTE_NOTIFY_CHAR_UUID    0xFF01
+#define REMOTE_NOTIFY_CHAR_UUID    0x1811 //TEST_CHRC_UUID = '1811', dummy test characteristic dans example-gatt-server
 #define PROFILE_NUM      1
 #define PROFILE_A_APP_ID 0
 #define INVALID_HANDLE   0
@@ -267,11 +282,22 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
             break;
         }
         ESP_LOGI(GATTC_TAG, "write descr success ");
-        uint8_t write_char_data[35];
+        
+        
+        /***c'est ici que write vers bluez example-gatt-server (TestCharacteristic Write: )*/
+        
+        
+        /*uint8_t write_char_data[35];
         for (int i = 0; i < sizeof(write_char_data); ++i)
-        {
-            write_char_data[i] = i % 256;
-        }
+			write_char_data[i] = i % 256;*/
+			
+		uint8_t write_char_data[3];
+		write_char_data[0] = 19;
+		write_char_data[1] = 3;
+		write_char_data[2] = 1;
+		
+        
+        
         esp_ble_gattc_write_char( gattc_if,
                                   gl_profile_tab[PROFILE_A_APP_ID].conn_id,
                                   gl_profile_tab[PROFILE_A_APP_ID].char_handle,
@@ -279,6 +305,7 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
                                   write_char_data,
                                   ESP_GATT_WRITE_TYPE_RSP,
                                   ESP_GATT_AUTH_REQ_NONE);
+									
         break;
     case ESP_GATTC_SRVC_CHG_EVT: {
         esp_bd_addr_t bda;
@@ -462,7 +489,7 @@ void app_main()
         return;
     }
 
-    ret = esp_ble_gattc_app_register(PROFILE_A_APP_ID);
+    ret = esp_ble_gattc_app_register(PROFILE_A_APP_ID); //démarre tout
     if (ret){
         ESP_LOGE(GATTC_TAG, "%s gattc app register failed, error code = %x\n", __func__, ret);
     }
