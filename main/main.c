@@ -16,8 +16,11 @@
 
 /****************************************************************************
 *
-* Client esp32. De l'autre côté: bluez, test/example-gatt-server (penser aux autorisations
-* name = dbus.service.BusName("laroque.gatts", bus) avant mainloop.run()
+* Client esp32. De l'autre côté: bluez-5.47 (device name dans le script example-advertisement)
+* , lancer des scripts python (marchent très bien en python2, et pas besoin d'autorisations)
+* test/example-gatt-server
+* 	changer les uuids TEST_CHRC_UUID et TEST_SVC_UUID et ajouter , 'notify' dans la struct des properties (along with read, write...° 
+* test/example-advertisement->changer le nom à add_local_name (merci la 5.47)
 * 
 * Pour matcher service et characteristic il faut:
 * -adapter REMOTE_SERVICE_UUID qui doit correspondre à une décla de service dans bluez/test/example-gatt-server
