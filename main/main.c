@@ -51,7 +51,7 @@
 #include "esp_bt_main.h"
 #include "esp_gatt_common_api.h"
 
-//sleep
+//sleep et lecture addr mac
 #include "esp_system.h"
 #include "esp_sleep.h"
 
@@ -64,13 +64,15 @@
 #define PROFILE_A_APP_ID 0
 #define INVALID_HANDLE   0
 
+static uint8_t base_mac_addr[6] = { 0 };
+
 static const char remote_device_name[] = "BLUEZ_VVNX";
 static bool connect    = false;
 static bool get_server = false;
 static esp_gattc_char_elem_t *char_elem_result   = NULL;
 static esp_gattc_descr_elem_t *descr_elem_result = NULL;
 
-/* eclare static functions */
+/* declare static functions */
 static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
 static void esp_gattc_cb(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param);
 static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param);
@@ -294,10 +296,18 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
         for (int i = 0; i < sizeof(write_char_data); ++i)
 			write_char_data[i] = i % 256;*/
 			
-		uint8_t write_char_data[3];
+			    //addr mac , les addr WIFI et BT prennent la base et y ajoute 1,2,3 etc...
+
+		esp_efuse_mac_get_default(base_mac_addr);
+		ESP_LOGI(GATTC_TAG, "VINCENT ADDR MAC BASE %02x %02x %02x", base_mac_addr[3], base_mac_addr[4], base_mac_addr[5]);
+			
+		uint8_t write_char_data[6];
 		write_char_data[0] = 19;
 		write_char_data[1] = 3;
 		write_char_data[2] = 1;
+		write_char_data[3] = base_mac_addr[3];
+		write_char_data[4] = base_mac_addr[4];
+		write_char_data[5] = base_mac_addr[5];
 		
         
         
@@ -501,7 +511,10 @@ void app_main()
         ESP_LOGE(GATTC_TAG, "set local  MTU failed, error code = %x", local_mtu_ret);
     }
     
-    /**sleep**/
+
+
+    
+     /**sleep**/   
     vTaskDelay(15000 / portTICK_PERIOD_MS); //pour pas qu'il redémarre avant d'avoir eu le temps de faire la connexion bt   
     esp_sleep_enable_timer_wakeup(30 * 1000000); //microsecondes
     esp_deep_sleep_start();
