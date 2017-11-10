@@ -55,6 +55,10 @@
 #include "esp_bt_main.h"
 #include "esp_gatt_common_api.h"
 
+//sleep
+#include "esp_system.h"
+#include "esp_sleep.h"
+
 #define GATTC_TAG "GATTC_DEMO"
 //#define REMOTE_SERVICE_UUID        0x00FF
 #define REMOTE_SERVICE_UUID        0x1810 //j'y arrive pas avec dans example-gatt-server TEST_SVC_UUID = '12345678-1234-5678-1234-56789abcdef0', donc je TEST_SVC_UUID = '1810'
@@ -500,6 +504,11 @@ void app_main()
     if (local_mtu_ret){
         ESP_LOGE(GATTC_TAG, "set local  MTU failed, error code = %x", local_mtu_ret);
     }
+    
+    vTaskDelay(15000 / portTICK_PERIOD_MS);
+    
+    esp_sleep_enable_timer_wakeup(30 * 1000000); //microsecondes
+    esp_deep_sleep_start();
 
 }
 
