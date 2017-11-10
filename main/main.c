@@ -15,12 +15,14 @@
 
 
 /****************************************************************************
+ * 
+ * VINCENT NOTES
 *
-* Client esp32. De l'autre côté: bluez-5.47 (device name dans le script example-advertisement)
-* , lancer des scripts python (marchent très bien en python2, et pas besoin d'autorisations)
-* test/example-gatt-server
+* Client esp32. De l'autre côté: bluez-5.47 (pas 5.45 cause device name dans le script example-advertisement)
+* lancer deux scripts python (marchent très bien en python2, et pas besoin d'autorisations):
+* 1)test/example-gatt-server
 * 	changer les uuids TEST_CHRC_UUID et TEST_SVC_UUID et ajouter , 'notify' dans la struct des properties (along with read, write...° 
-* test/example-advertisement->changer le nom à add_local_name (merci la 5.47)
+* 2)test/example-advertisement->changer le nom à add_local_name (merci la 5.47 bluez)
 * 
 * Pour matcher service et characteristic il faut:
 * -adapter REMOTE_SERVICE_UUID qui doit correspondre à une décla de service dans bluez/test/example-gatt-server
@@ -31,12 +33,6 @@
 * L'envoi lui même se passe dans case ESP_GATTC_WRITE_DESCR_EVT
 * 
 * 
-* 
-* 
-* This file is for gatt client. It can scan ble device, connect one device.
-* Run the gatt_server demo, the client demo will automatically connect to the gatt_server demo.
-* Client demo will enable gatt_server's notify after connection. Then the two devices will exchange
-* data.
 *
 ****************************************************************************/
 
@@ -505,8 +501,8 @@ void app_main()
         ESP_LOGE(GATTC_TAG, "set local  MTU failed, error code = %x", local_mtu_ret);
     }
     
-    vTaskDelay(15000 / portTICK_PERIOD_MS);
-    
+    /**sleep**/
+    vTaskDelay(15000 / portTICK_PERIOD_MS); //pour pas qu'il redémarre avant d'avoir eu le temps de faire la connexion bt   
     esp_sleep_enable_timer_wakeup(30 * 1000000); //microsecondes
     esp_deep_sleep_start();
 
