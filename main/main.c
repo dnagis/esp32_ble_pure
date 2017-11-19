@@ -55,6 +55,13 @@
 #include "esp_system.h"
 #include "esp_sleep.h"
 
+//temperature
+#include <stdlib.h>
+#include <math.h>
+#include "ds18b20.h" 
+const int DS_PIN = 5;
+float temperature;
+
 #define GATTC_TAG "GATTC_DEMO"
 //#define REMOTE_SERVICE_UUID        0x00FF
 #define REMOTE_SERVICE_UUID        0x1810 //j'y arrive pas avec dans example-gatt-server TEST_SVC_UUID = '12345678-1234-5678-1234-56789abcdef0', donc je TEST_SVC_UUID = '1810'
@@ -300,11 +307,23 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
 
 		esp_efuse_mac_get_default(base_mac_addr);
 		ESP_LOGI(GATTC_TAG, "VINCENT ADDR MAC BASE %02x %02x %02x", base_mac_addr[3], base_mac_addr[4], base_mac_addr[5]);
+		
+		
+		//si je DS_get_temp() ici ca plante au runtime, je fais donc le relevé de temp dans main()
+		double temp_abs = fabs(temperature);
+		ESP_LOGI(GATTC_TAG, "VINCENT TEMPERATURE=%.6f", temperature);
+		int intPart = (int) temp_abs; //partie avant la virgule
+		ESP_LOGI(GATTC_TAG, "VINCENT TEMPERATURE CAST EN INT=%i", intPart);
+		float fracPart = temp_abs - intPart;
+		int decPart = (int)((fracPart * 10)+0.5); //partie après la virgule
+		ESP_LOGI(GATTC_TAG, "VINCENT TEMPERATURE DECPART=%i", decPart);
+		
+
 			
 		uint8_t write_char_data[6];
-		write_char_data[0] = 19;
-		write_char_data[1] = 3;
-		write_char_data[2] = 1;
+		write_char_data[0] = intPart;
+		write_char_data[1] = decPart;
+		write_char_data[2] = (temperature < 0) ? 0 : 1 ; //"sign" 0 si <0 sinon 1
 		write_char_data[3] = base_mac_addr[3];
 		write_char_data[4] = base_mac_addr[4];
 		write_char_data[5] = base_mac_addr[5];
@@ -457,6 +476,11 @@ void app_main()
 {
     // Initialize NVS.
     esp_err_t ret = nvs_flash_init();
+    
+    DS_init(DS_PIN); //initialisation dallas
+    temperature = DS_get_temp();
+
+    
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES) {
         ESP_ERROR_CHECK(nvs_flash_erase());
         ret = nvs_flash_init();
