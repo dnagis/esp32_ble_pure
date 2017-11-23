@@ -198,6 +198,7 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
             }
 
             if (count > 0){
+				ESP_LOGE(GATTC_TAG, "VINCENT COUNT esp_ble_gattc_get_attr_count = %i", count); // ***1***
                 char_elem_result = (esp_gattc_char_elem_t *)malloc(sizeof(char_elem_result) * count);
                 if (!char_elem_result){
                     ESP_LOGE(GATTC_TAG, "gattc no mem");
@@ -212,7 +213,7 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
                     if (status != ESP_GATT_OK){
                         ESP_LOGE(GATTC_TAG, "esp_ble_gattc_get_char_by_uuid error");
                     }
-
+					
                     /*  Every service have only one char in our 'ESP_GATTS_DEMO' demo, so we used first 'char_elem_result' */
                     if (count > 0 && (char_elem_result[0].properties & ESP_GATT_CHAR_PROP_BIT_NOTIFY)){
                         gl_profile_tab[PROFILE_A_APP_ID].char_handle = char_elem_result[0].char_handle;
@@ -272,6 +273,15 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
                     if (ret_status != ESP_GATT_OK){
                         ESP_LOGE(GATTC_TAG, "esp_ble_gattc_write_char_descr error");
                     }
+                    
+                    //vincent si tu commentes esp_ble_gattc_write_char_descr juste au dessus tu peux lancer ça et ça fait parler ReadValue dans gatt server de bluez
+                    //ret_status = esp_ble_gattc_read_char( gattc_if,
+                    //              gl_profile_tab[PROFILE_A_APP_ID].conn_id,
+                    //              gl_profile_tab[PROFILE_A_APP_ID].char_handle,
+                    //                                                 ESP_GATT_AUTH_REQ_NONE);
+                    //mais si tu commentes pas tu obtiens ça:
+                    //E (5798) BT: bta_gattc_enqueue: already has a pending command!!
+					//vincent
 
                     /* free descr_elem_result */
                     free(descr_elem_result);
@@ -287,6 +297,9 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
     case ESP_GATTC_NOTIFY_EVT:
         ESP_LOGI(GATTC_TAG, "ESP_GATTC_NOTIFY_EVT, receive notify value:");
         esp_log_buffer_hex(GATTC_TAG, p_data->notify.value, p_data->notify.value_len);
+        break;
+    case ESP_GATTC_READ_DESCR_EVT:
+        ESP_LOGI(GATTC_TAG, "*********VINCENT ESP_GATTC_READ_DESCR_EVT...***********");
         break;
     case ESP_GATTC_WRITE_DESCR_EVT:
         if (p_data->write.status != ESP_GATT_OK){
@@ -337,6 +350,10 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
                                   write_char_data,
                                   ESP_GATT_WRITE_TYPE_RSP,
                                   ESP_GATT_AUTH_REQ_NONE);
+        
+        
+                    
+        
 									
         break;
     case ESP_GATTC_SRVC_CHG_EVT: {
@@ -540,7 +557,7 @@ void app_main()
     
      /**sleep**/   
     vTaskDelay(15000 / portTICK_PERIOD_MS); //pour pas qu'il redémarre avant d'avoir eu le temps de faire la connexion bt   
-    esp_sleep_enable_timer_wakeup(30 * 1000000); //microsecondes
+    esp_sleep_enable_timer_wakeup(500 * 1000000); //microsecondes
     esp_deep_sleep_start();
 
 }
