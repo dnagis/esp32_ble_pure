@@ -260,7 +260,7 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
                     }
 
                     /* Erery char have only one descriptor in our 'ESP_GATTS_DEMO' demo, so we used first 'descr_elem_result' */
-                    if (count > 0 && descr_elem_result[0].uuid.len == ESP_UUID_LEN_16 && descr_elem_result[0].uuid.uuid.uuid16 == ESP_GATT_UUID_CHAR_CLIENT_CONFIG){
+                    /*if (count > 0 && descr_elem_result[0].uuid.len == ESP_UUID_LEN_16 && descr_elem_result[0].uuid.uuid.uuid16 == ESP_GATT_UUID_CHAR_CLIENT_CONFIG){
                         ret_status = esp_ble_gattc_write_char_descr( gattc_if,
                                                                      gl_profile_tab[PROFILE_A_APP_ID].conn_id,
                                                                      descr_elem_result[0].handle,
@@ -272,13 +272,13 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
 
                     if (ret_status != ESP_GATT_OK){
                         ESP_LOGE(GATTC_TAG, "esp_ble_gattc_write_char_descr error");
-                    }
+                    }*/
                     
                     //vincent si tu commentes esp_ble_gattc_write_char_descr juste au dessus tu peux lancer ça et ça fait parler ReadValue dans gatt server de bluez
-                    //ret_status = esp_ble_gattc_read_char( gattc_if,
-                    //              gl_profile_tab[PROFILE_A_APP_ID].conn_id,
-                    //              gl_profile_tab[PROFILE_A_APP_ID].char_handle,
-                    //                                                 ESP_GATT_AUTH_REQ_NONE);
+                    ret_status = esp_ble_gattc_read_char( gattc_if,
+                                  gl_profile_tab[PROFILE_A_APP_ID].conn_id,
+                                  gl_profile_tab[PROFILE_A_APP_ID].char_handle,
+                                                                     ESP_GATT_AUTH_REQ_NONE);
                     //mais si tu commentes pas tu obtiens ça:
                     //E (5798) BT: bta_gattc_enqueue: already has a pending command!!
 					//vincent
@@ -298,9 +298,17 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
         ESP_LOGI(GATTC_TAG, "ESP_GATTC_NOTIFY_EVT, receive notify value:");
         esp_log_buffer_hex(GATTC_TAG, p_data->notify.value, p_data->notify.value_len);
         break;
-    case ESP_GATTC_READ_DESCR_EVT:
-        ESP_LOGI(GATTC_TAG, "*********VINCENT ESP_GATTC_READ_DESCR_EVT...***********");
+        /**
+         * vincent je rajoute ce case qui arrive après avoir appelé esp_ble_gattc_read_char()
+         */
+    case ESP_GATTC_READ_CHAR_EVT:
+        ESP_LOGI(GATTC_TAG, "*********VINCENT ESP_GATTC_READ_CHAR_EVT...***********");
+        //les définitions de p_data dans lesquelles il y a plein de bonnes variables bien sympathiques: esp_gattc_api.h
+        esp_log_buffer_hex(GATTC_TAG, p_data->read.value, p_data->read.value_len);        
         break;
+        
+        
+
     case ESP_GATTC_WRITE_DESCR_EVT:
         if (p_data->write.status != ESP_GATT_OK){
             ESP_LOGE(GATTC_TAG, "write descr failed, error status = %x", p_data->write.status);
