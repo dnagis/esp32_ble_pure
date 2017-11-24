@@ -61,6 +61,7 @@
 #include "ds18b20.h" 
 const int DS_PIN = 5;
 float temperature;
+int dodo_duration = 1; //par défaut
 
 #define GATTC_TAG "GATTC_DEMO"
 //#define REMOTE_SERVICE_UUID        0x00FF
@@ -291,14 +292,7 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
         ESP_LOGI(GATTC_TAG, "ESP_GATTC_NOTIFY_EVT, receive notify value:");
         esp_log_buffer_hex(GATTC_TAG, p_data->notify.value, p_data->notify.value_len);
         break;
-        /**
-         * vincent je rajoute ce case qui arrive après avoir appelé esp_ble_gattc_read_char()
-         */
-    case ESP_GATTC_READ_CHAR_EVT:
-        ESP_LOGI(GATTC_TAG, "*********VINCENT ESP_GATTC_READ_CHAR_EVT...***********");
-        //les définitions de p_data dans lesquelles il y a plein de bonnes variables bien sympathiques: esp_gattc_api.h
-        esp_log_buffer_hex(GATTC_TAG, p_data->read.value, p_data->read.value_len);        
-        break;
+
         
         
 
@@ -380,6 +374,22 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
             break;
         }
         ESP_LOGI(GATTC_TAG, "write char success ");
+        break;
+         /**
+         * vincent je rajoute ce case qui arrive après avoir appelé esp_ble_gattc_read_char()
+         */
+    case ESP_GATTC_READ_CHAR_EVT:
+        ESP_LOGI(GATTC_TAG, "*********VINCENT ESP_GATTC_READ_CHAR_EVT...***********");
+        //les définitions de p_data dans lesquelles il y a plein de bonnes variables bien sympathiques: esp_gattc_api.h
+        esp_log_buffer_hex(GATTC_TAG, p_data->read.value, p_data->read.value_len); 
+        //voir esp_log_buffer_hex_internal() dans components/log/log.c c'est SUPER CHIANT ces histoires de pointeur, mais bon, on est en C ;)
+        //p_data->read.value_len est toujours à 1 (de 1 à 120 en tout cas)
+        char temp_buffer[1];
+        char *ptr_line;
+        memcpy( temp_buffer, p_data->read.value, 1 );
+        ptr_line = temp_buffer;
+        dodo_duration = ptr_line[0];   
+        ESP_LOGI(GATTC_TAG, "arrivée de la variable: %i de longueur: %i", dodo_duration, p_data->read.value_len);     
         break;
     case ESP_GATTC_DISCONNECT_EVT:
         connect = false;
@@ -567,8 +577,9 @@ void app_main()
 
     
      /**sleep**/   
-    vTaskDelay(15000 / portTICK_PERIOD_MS); //pour pas qu'il redémarre avant d'avoir eu le temps de faire la connexion bt   
-    esp_sleep_enable_timer_wakeup(500 * 1000000); //microsecondes
+    vTaskDelay(15000 / portTICK_PERIOD_MS); //pour pas qu'il redémarre avant d'avoir eu le temps de faire la connexion bt
+    ESP_LOGI(GATTC_TAG, "On va faire dodo %i minutes... Buona Notte...", dodo_duration);   
+    esp_sleep_enable_timer_wakeup(dodo_duration * 60 * 1000000); //microsecondes
     esp_deep_sleep_start();
 
 }
