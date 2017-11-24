@@ -260,7 +260,7 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
                     }
 
                     /* Erery char have only one descriptor in our 'ESP_GATTS_DEMO' demo, so we used first 'descr_elem_result' */
-                    /*if (count > 0 && descr_elem_result[0].uuid.len == ESP_UUID_LEN_16 && descr_elem_result[0].uuid.uuid.uuid16 == ESP_GATT_UUID_CHAR_CLIENT_CONFIG){
+                    if (count > 0 && descr_elem_result[0].uuid.len == ESP_UUID_LEN_16 && descr_elem_result[0].uuid.uuid.uuid16 == ESP_GATT_UUID_CHAR_CLIENT_CONFIG){
                         ret_status = esp_ble_gattc_write_char_descr( gattc_if,
                                                                      gl_profile_tab[PROFILE_A_APP_ID].conn_id,
                                                                      descr_elem_result[0].handle,
@@ -272,16 +272,9 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
 
                     if (ret_status != ESP_GATT_OK){
                         ESP_LOGE(GATTC_TAG, "esp_ble_gattc_write_char_descr error");
-                    }*/
+                    }
                     
-                    //vincent si tu commentes esp_ble_gattc_write_char_descr juste au dessus tu peux lancer ça et ça fait parler ReadValue dans gatt server de bluez
-                    ret_status = esp_ble_gattc_read_char( gattc_if,
-                                  gl_profile_tab[PROFILE_A_APP_ID].conn_id,
-                                  gl_profile_tab[PROFILE_A_APP_ID].char_handle,
-                                                                     ESP_GATT_AUTH_REQ_NONE);
-                    //mais si tu commentes pas tu obtiens ça:
-                    //E (5798) BT: bta_gattc_enqueue: already has a pending command!!
-					//vincent
+
 
                     /* free descr_elem_result */
                     free(descr_elem_result);
@@ -372,6 +365,16 @@ static void gattc_profile_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_
         break;
     }
     case ESP_GATTC_WRITE_CHAR_EVT:
+                    //vincent tu peux pas mettre ça dans un autre case à côté de esp_ble_gattc_write_char sinon: E (5798) BT: bta_gattc_enqueue: already has a pending command!!
+                    esp_ble_gattc_read_char( gattc_if,
+                                  gl_profile_tab[PROFILE_A_APP_ID].conn_id,
+                                  gl_profile_tab[PROFILE_A_APP_ID].char_handle,
+                                                                     ESP_GATT_AUTH_REQ_NONE);
+
+					//vincent
+        
+        
+        
         if (p_data->write.status != ESP_GATT_OK){
             ESP_LOGE(GATTC_TAG, "write char failed, error status = %x", p_data->write.status);
             break;
