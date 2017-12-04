@@ -12,6 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/**
+ * https://git-scm.com/book/fr/v1/Les-branches-avec-Git-Brancher-et-fusionner%C2%A0:-les-bases
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ */
 
 
 #include <stdint.h>
@@ -52,7 +63,7 @@ void app_main()
         return;
     }
 
-    ret = esp_bt_controller_enable(ESP_BT_MODE_BLE); //au lieu de BTDM (dual mode) je ne veux que LE
+    ret = esp_bt_controller_enable(ESP_BT_MODE_BTDM); //BTDM = "dual mode. Si je ne veux que LE -> ERROR enable controller failed, error code = 102
     if (ret) {
         ESP_LOGE(MON_TAG, "%s enable controller failed, error code = %x\n", __func__, ret);
         return;
