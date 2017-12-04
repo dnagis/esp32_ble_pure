@@ -33,79 +33,52 @@
 #include "esp_system.h"
 #include "esp_sleep.h"
 
-
+static const char *MON_TAG = "BLE_PURE";
 
 void app_main()
 {
-    // Initialize NVS.
-    esp_err_t ret = nvs_flash_init();
-    
-    DS_init(DS_PIN); //initialisation dallas
-    temperature = DS_get_temp();
-
-    
+    // Initialize NVS. "Non-volatile storage (NVS) library is designed to store key-value pairs in flash."
+    esp_err_t ret = nvs_flash_init();    
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES) {
         ESP_ERROR_CHECK(nvs_flash_erase());
         ret = nvs_flash_init();
     }
-    ESP_ERROR_CHECK( ret );
+    ESP_ERROR_CHECK( ret );    
 
-    esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
+    esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT(); //components/bt/include/bt.h
     ret = esp_bt_controller_init(&bt_cfg);
     if (ret) {
-        ESP_LOGE(GATTC_TAG, "%s initialize controller failed, error code = %x\n", __func__, ret);
+        ESP_LOGE(MON_TAG, "%s initialize controller failed, error code = %x\n", __func__, ret);
         return;
     }
 
-    ret = esp_bt_controller_enable(ESP_BT_MODE_BTDM);
+    ret = esp_bt_controller_enable(ESP_BT_MODE_BLE); //au lieu de BTDM (dual mode) je ne veux que LE
     if (ret) {
-        ESP_LOGE(GATTC_TAG, "%s enable controller failed, error code = %x\n", __func__, ret);
+        ESP_LOGE(MON_TAG, "%s enable controller failed, error code = %x\n", __func__, ret);
         return;
     }
 
     ret = esp_bluedroid_init();
     if (ret) {
-        ESP_LOGE(GATTC_TAG, "%s init bluetooth failed, error code = %x\n", __func__, ret);
+        ESP_LOGE(MON_TAG, "%s init bluetooth failed, error code = %x\n", __func__, ret);
         return;
     }
 
     ret = esp_bluedroid_enable();
     if (ret) {
-        ESP_LOGE(GATTC_TAG, "%s enable bluetooth failed, error code = %x\n", __func__, ret);
+        ESP_LOGE(MON_TAG, "%s enable bluetooth failed, error code = %x\n", __func__, ret);
         return;
     }
 
-    //register the  callback function to the gap module
-    ret = esp_ble_gap_register_callback(esp_gap_cb);
-    if (ret){
-        ESP_LOGE(GATTC_TAG, "%s gap register failed, error code = %x\n", __func__, ret);
-        return;
-    }
+    //register the  callback function to the gap module -> esp_ble_gap_register_callback --> je vire
+    //register the callback function to the gattc module --> esp_ble_gattc_register_callback --> je vire
+    //esp_ble_gattc_app_register(PROFILE_A_APP_ID); // --> je vire
 
-    //register the callback function to the gattc module
-    ret = esp_ble_gattc_register_callback(esp_gattc_cb);
-    if(ret){
-        ESP_LOGE(GATTC_TAG, "%s gattc register failed, error code = %x\n", __func__, ret);
-        return;
-    }
-
-    ret = esp_ble_gattc_app_register(PROFILE_A_APP_ID); //démarre tout
-    if (ret){
-        ESP_LOGE(GATTC_TAG, "%s gattc app register failed, error code = %x\n", __func__, ret);
-    }
     esp_err_t local_mtu_ret = esp_ble_gatt_set_local_mtu(500);
     if (local_mtu_ret){
-        ESP_LOGE(GATTC_TAG, "set local  MTU failed, error code = %x", local_mtu_ret);
+        ESP_LOGE(MON_TAG, "set local  MTU failed, error code = %x", local_mtu_ret);
     }
-    
 
-
-    
-     /**sleep**/   
-    vTaskDelay(15000 / portTICK_PERIOD_MS); //pour pas qu'il redémarre avant d'avoir eu le temps de faire la connexion bt
-    ESP_LOGI(GATTC_TAG, "On va faire dodo %i minutes... Buona Notte...", dodo_duration);   
-    esp_sleep_enable_timer_wakeup(dodo_duration * 60 * 1000000); //microsecondes
-    esp_deep_sleep_start();
-
+	ESP_LOGI(MON_TAG, "Vincent, fin de app_main()...");
 }
 
