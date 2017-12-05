@@ -15,9 +15,28 @@
 /**
  * https://git-scm.com/book/fr/v1/Les-branches-avec-Git-Brancher-et-fusionner%C2%A0:-les-bases
  * 
+ * https://www.silabs.com/community/wireless/bluetooth/knowledge-base.entry.html/2017/02/10/bluetooth_advertisin-hGsf
+ * 
+ * https://www.bluetooth.com/specifications/assigned-numbers/generic-access-profile
+ * 
+ * hcitool lescan
+	LE Scan ...
+	30:AE:A4:04:C3:5A ESP-BLE-HELLO
+	30:AE:A4:04:C3:5A (unknown)
  * 
  * 
- * 
+ * btmon:
+ * > HCI Event: LE Meta Event (0x3e) plen 12                                                                      #98 [hci0] 97.848436
+      LE Advertising Report (0x02)
+        Num reports: 1
+        Event type: Scan response - SCAN_RSP (0x04)
+        Address type: Public (0x00)
+        Address: 30:AE:A4:04:C3:5A (OUI 30-AE-A4)
+        Data length: 0
+        RSSI: -32 dBm (0xe0)
+@ Device Found: 30:AE:A4:04:C3:5A (1) rssi -32 flags 0x0000
+        02 01 06 0e 09 45 53 50 2d 42 4c 45 2d 48 45 4c  .....ESP-BLE-HEL
+        4c 4f                                            LO 
  * 
  * 
  * 
@@ -194,8 +213,11 @@ static void hci_cmd_send_ble_set_adv_data(void)
 {
     char *adv_name = "ESP-BLE-HELLO";
     uint8_t name_len = (uint8_t)strlen(adv_name);
-    uint8_t adv_data[31] = {0x02, 0x01, 0x06, 0x0, 0x09};
+    uint8_t adv_data[31] = {0x02, 0x01, 0x06, 0x0, 0x09}; 	//0x01: «Flags» 0x09: «Complete Local Name» bluetooth.com/specifications/assigned-numbers/generic-access-profile
     uint8_t adv_data_len;
+    
+    /**02 01 06 0e 09 45 53 50 2d 42 4c 45 2d 48 45 4c  .....ESP-BLE-HELLO
+        4c 4f */
 
     adv_data[3] = name_len + 1;
     for (int i = 0; i < name_len; i++) {
