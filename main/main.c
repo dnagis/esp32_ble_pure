@@ -13,6 +13,8 @@
 // limitations under the License.
 
 /**
+ * Inspiré fortement de esp-idf/examples/bluetooth/ble_adv
+ * 
  * https://git-scm.com/book/fr/v1/Les-branches-avec-Git-Brancher-et-fusionner%C2%A0:-les-bases
  * 
  * https://www.silabs.com/community/wireless/bluetooth/knowledge-base.entry.html/2017/02/10/bluetooth_advertisin-hGsf
@@ -211,7 +213,7 @@ static void hci_cmd_send_ble_set_adv_param(void)
 
 static void hci_cmd_send_ble_set_adv_data(void)
 {
-    char *adv_name = "ESP-BLE-HELLO";
+    char *adv_name = "ESP-BLE-HELLO3";
     uint8_t name_len = (uint8_t)strlen(adv_name);
     uint8_t adv_data[31] = {0x02, 0x01, 0x06, 0x0, 0x09}; 	//0x01: «Flags» 0x09: «Complete Local Name» bluetooth.com/specifications/assigned-numbers/generic-access-profile
     uint8_t adv_data_len;
@@ -224,7 +226,7 @@ static void hci_cmd_send_ble_set_adv_data(void)
         adv_data[5 + i] = (uint8_t)adv_name[i];
     }
     adv_data_len = 5 + name_len;
-
+	//core specs p 1256
     uint16_t sz = make_cmd_ble_set_adv_data(hci_cmd_buf, adv_data_len, (uint8_t *)adv_data);
     esp_vhci_host_send_packet(hci_cmd_buf, sz);
 }
@@ -238,7 +240,9 @@ void bleAdvtTask(void *pvParameters)
     bool send_avail = false;
     esp_vhci_host_register_callback(&vhci_host_cb);
     printf("BLE advt task start\n");
-    while (1) {
+    //Perso je vois pas l'interêt de la boucle... L'advertisement se fait en continu même si tu fais pas de boucle...
+    //... et puis l'histoire de chech_send_available: vu qu'il est toujours available: fuck it...
+    /*while (1) {
         vTaskDelay(1000 / portTICK_PERIOD_MS);
         send_avail = esp_vhci_host_check_send_available();
         if (send_avail) {
@@ -250,7 +254,14 @@ void bleAdvtTask(void *pvParameters)
             }
         }
         printf("BLE Advertise, flag_send_avail: %d, cmd_sent: %d\n", send_avail, cmd_cnt);
-    }
+    }*/
+	hci_cmd_send_reset();
+	hci_cmd_send_ble_set_adv_param();
+	hci_cmd_send_ble_set_adv_data();
+	hci_cmd_send_ble_adv_start();
+	vTaskDelay(60000 / portTICK_PERIOD_MS); //si je fais pas ça le bestiau redémarre tout le temps.... chiant
+    
+
 }
 
 void app_main()
