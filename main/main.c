@@ -15,6 +15,11 @@
 /**
  * Inspiré fortement de esp-idf/examples/bluetooth/ble_adv
  * 
+ * Commandes HCI dans core specs: " Host Controller Interface Functional Specification Vol 2, Part E "
+ * 		LE Set Advertising Parameters Command p 1251
+ * 		LE Set Advertising Data Command p 1256
+ * 		LE Set Scan Response Data Command p 1257
+ * 
  * https://git-scm.com/book/fr/v1/Les-branches-avec-Git-Brancher-et-fusionner%C2%A0:-les-bases
  * 
  * https://www.silabs.com/community/wireless/bluetooth/knowledge-base.entry.html/2017/02/10/bluetooth_advertisin-hGsf
