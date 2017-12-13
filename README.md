@@ -1,4 +1,4 @@
-# esp32_bt_gattc
-client bluetooth
+# esp32_ble_pure
 
-Voir mtox/temperature pour l'organisation globale.
+
+Adertise sur l'esp32 en collant de très près aux commandes HCI
