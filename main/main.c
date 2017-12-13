@@ -73,6 +73,7 @@ static const char *MON_TAG = "BLE_PURE";
 #define HCI_BLE_WRITE_ADV_ENABLE           (0x000A | HCI_GRP_BLE_CMDS)
 #define HCI_BLE_WRITE_ADV_PARAMS           (0x0006 | HCI_GRP_BLE_CMDS)
 #define HCI_BLE_WRITE_ADV_DATA             (0x0008 | HCI_GRP_BLE_CMDS)
+#define HCI_BLE_WRITE_SCAN_RESP_DATA       (0x0009 | HCI_GRP_BLE_CMDS) //core specs HCI func specs p 1257
 
 #define HCIC_PARAM_SIZE_WRITE_ADV_ENABLE        (1)
 #define HCIC_PARAM_SIZE_BLE_WRITE_ADV_PARAMS    (15)
@@ -236,6 +237,37 @@ static void hci_cmd_send_ble_set_adv_data(void)
     esp_vhci_host_send_packet(hci_cmd_buf, sz);
 }
 
+/***SCAN RESP... VVNX***/
+static uint16_t make_cmd_ble_set_scan_resp_data(uint8_t *buf, uint8_t data_len, uint8_t *p_data)
+{
+    UINT8_TO_STREAM (buf, H4_TYPE_COMMAND);
+    UINT16_TO_STREAM (buf, HCI_BLE_WRITE_SCAN_RESP_DATA);
+    UINT8_TO_STREAM  (buf, HCIC_PARAM_SIZE_BLE_WRITE_ADV_DATA + 1);
+
+    memset(buf, 0, HCIC_PARAM_SIZE_BLE_WRITE_ADV_DATA);
+
+    if (p_data != NULL && data_len > 0) {
+        if (data_len > HCIC_PARAM_SIZE_BLE_WRITE_ADV_DATA) {
+            data_len = HCIC_PARAM_SIZE_BLE_WRITE_ADV_DATA;
+        }
+
+        UINT8_TO_STREAM (buf, data_len);
+
+        ARRAY_TO_STREAM (buf, p_data, data_len);
+    }
+    return HCI_H4_CMD_PREAMBLE_SIZE + HCIC_PARAM_SIZE_BLE_WRITE_ADV_DATA + 1;
+}
+
+static void hci_cmd_send_ble_set_scan_resp_data(void)
+{	
+	uint8_t adv_data[31] = {0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04};
+	uint8_t adv_data_len = 7;
+	uint16_t sz = make_cmd_ble_set_scan_resp_data(hci_cmd_buf, adv_data_len, (uint8_t *)adv_data);
+    esp_vhci_host_send_packet(hci_cmd_buf, sz);
+}
+/***SCAN RESP... VVNX***/
+
+
 /*
  * @brief: send HCI commands to perform BLE advertising;
  */
@@ -263,6 +295,7 @@ void bleAdvtTask(void *pvParameters)
 	hci_cmd_send_reset();
 	hci_cmd_send_ble_set_adv_param();
 	hci_cmd_send_ble_set_adv_data();
+	hci_cmd_send_ble_set_scan_resp_data();
 	hci_cmd_send_ble_adv_start();
 	vTaskDelay(60000 / portTICK_PERIOD_MS); //si je fais pas ça le bestiau redémarre tout le temps.... chiant
     
