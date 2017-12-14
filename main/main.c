@@ -15,6 +15,8 @@
 /**
  * Inspiré fortement de esp-idf/examples/bluetooth/ble_adv
  * 
+ * de l'autre côté (bluez) projet lescan sur github
+ * 
  * Commandes HCI dans core specs: " Host Controller Interface Functional Specification Vol 2, Part E "
  * 		LE Set Advertising Parameters Command p 1251
  * 		LE Set Advertising Data Command p 1256
@@ -26,24 +28,6 @@
  * 
  * https://www.bluetooth.com/specifications/assigned-numbers/generic-access-profile
  * 
- * hcitool lescan
-	LE Scan ...
-	30:AE:A4:04:C3:5A ESP-BLE-HELLO
-	30:AE:A4:04:C3:5A (unknown)
- * 
- * 
- * btmon:
- * > HCI Event: LE Meta Event (0x3e) plen 12                                                                      #98 [hci0] 97.848436
-      LE Advertising Report (0x02)
-        Num reports: 1
-        Event type: Scan response - SCAN_RSP (0x04)
-        Address type: Public (0x00)
-        Address: 30:AE:A4:04:C3:5A (OUI 30-AE-A4)
-        Data length: 0
-        RSSI: -32 dBm (0xe0)
-@ Device Found: 30:AE:A4:04:C3:5A (1) rssi -32 flags 0x0000
-        02 01 06 0e 09 45 53 50 2d 42 4c 45 2d 48 45 4c  .....ESP-BLE-HEL
-        4c 4f                                            LO 
  * 
  * 
  * 
@@ -59,7 +43,11 @@
 #include "esp_log.h"
 #include "nvs_flash.h"
 
+//temperature
+#include <stdlib.h>
+#include <math.h>
 
+float temperature;
 static const char *MON_TAG = "BLE_PURE";
 
 
@@ -260,8 +248,19 @@ static uint16_t make_cmd_ble_set_scan_resp_data(uint8_t *buf, uint8_t data_len, 
 
 static void hci_cmd_send_ble_set_scan_resp_data(void)
 {	
-	uint8_t adv_data[31] = {0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04};
-	uint8_t adv_data_len = 7;
+	temperature = 20.5; //set la temp
+	double temp_abs = fabs(temperature);
+	int intPart = (int) temp_abs; //partie avant la virgule
+	float fracPart = temp_abs - intPart;
+	int decPart = (int)((fracPart * 10)+0.5); //partie après la virgule
+	
+	uint8_t adv_data[31];
+	adv_data[0] = intPart;
+	adv_data[1] = decPart;
+	adv_data[2] = (temperature < 0) ? 0 : 1 ; //"sign" 0 si <0 sinon 1
+	
+	//uint8_t adv_data[31] = {0x04, 0x05, 0x06, 0x04, 0x08, 0x09, 0x10};
+	uint8_t adv_data_len = 3;
 	uint16_t sz = make_cmd_ble_set_scan_resp_data(hci_cmd_buf, adv_data_len, (uint8_t *)adv_data);
     esp_vhci_host_send_packet(hci_cmd_buf, sz);
 }
@@ -297,7 +296,7 @@ void bleAdvtTask(void *pvParameters)
 	hci_cmd_send_ble_set_adv_data();
 	hci_cmd_send_ble_set_scan_resp_data();
 	hci_cmd_send_ble_adv_start();
-	vTaskDelay(60000 / portTICK_PERIOD_MS); //si je fais pas ça le bestiau redémarre tout le temps.... chiant
+	vTaskDelay(600000 / portTICK_PERIOD_MS); //si je fais pas ça le bestiau redémarre tout le temps.... chiant
     
 
 }
