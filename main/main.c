@@ -1,36 +1,16 @@
-// Copyright 2015-2017 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 /**
- * Inspiré fortement de esp-idf/examples/bluetooth/ble_adv
+ * Basé sur esp-idf/examples/bluetooth/ble_adv
  * 
- * de l'autre côté (bluez) projet lescan sur github
- * 
+ * * 
  * Commandes HCI dans core specs: " Host Controller Interface Functional Specification Vol 2, Part E "
  * 		LE Set Advertising Parameters Command p 1251
  * 		LE Set Advertising Data Command p 1256
  * 		LE Set Scan Response Data Command p 1257
  * 
- * https://git-scm.com/book/fr/v1/Les-branches-avec-Git-Brancher-et-fusionner%C2%A0:-les-bases
- * 
- * https://www.silabs.com/community/wireless/bluetooth/knowledge-base.entry.html/2017/02/10/bluetooth_advertisin-hGsf
- * 
- * https://www.bluetooth.com/specifications/assigned-numbers/generic-access-profile
  * 
  * 
- * 
- * 
+ * --> Scan, début le 201217 
+ * LE Set Scan Parameters Command. Core Specs p 1261. Vol. 2 Part E. HCI Func Specs
  * 
  */
 
