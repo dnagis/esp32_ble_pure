@@ -252,50 +252,35 @@ static void hci_cmd_send_ble_set_scan_resp_data(void)
 /***SCAN RESP... VVNX***/
 
 /***SET SCAN PARAMS... VVNX***/
-static uint16_t make_cmd_ble_set_scan_param (uint8_t *buf, uint16_t ....)
+static uint16_t make_cmd_ble_set_scan_param (uint8_t *buf, uint8_t scan_type, uint16_t scan_intv, uint16_t scan_wndw, 
+	uint8_t own_addr_type, uint8_t scan_filter_policy)
 {
     UINT8_TO_STREAM (buf, H4_TYPE_COMMAND);
     UINT16_TO_STREAM (buf, HCI_BLE_WRITE_SCAN_PARAMS);
     UINT8_TO_STREAM  (buf, HCIC_PARAM_SIZE_BLE_WRITE_SCAN_PARAMS );
 
-    UINT16_TO_STREAM (buf, adv_int_min);
-    UINT16_TO_STREAM (buf, adv_int_max);
-    UINT8_TO_STREAM (buf, adv_type);
-    UINT8_TO_STREAM (buf, addr_type_own);
-    UINT8_TO_STREAM (buf, addr_type_dir);
-    BDADDR_TO_STREAM (buf, direct_bda);
-    UINT8_TO_STREAM (buf, channel_map);
-    UINT8_TO_STREAM (buf, adv_filter_policy);
+	UINT8_TO_STREAM (buf, scan_type);
+	UINT16_TO_STREAM (buf, scan_intv);
+	UINT16_TO_STREAM (buf, scan_wndw);
+	UINT8_TO_STREAM (buf, own_addr_type);
+	UINT8_TO_STREAM (buf, scan_filter_policy);
     return HCI_H4_CMD_PREAMBLE_SIZE + HCIC_PARAM_SIZE_BLE_WRITE_SCAN_PARAMS;
 }
-
-
 
 static void hci_cmd_send_ble_set_scan_param(void)
 {
     uint8_t scan_type = 0;
-    uint16_t scan_intv = ???;
+    uint16_t scan_intv = 10; //pas bien compris la conversion....
+    uint16_t scan_wndw = 10; //pas bien compris la conversion....
+    uint8_t own_addr_type = 0;
+    uint8_t scan_filter_policy = 0;
     
-    
-    
-    uint16_t adv_intv_min = 256; // 160ms
-    uint16_t adv_intv_max = 256; // 160ms
-    uint8_t adv_type = 0; // connectable undirected advertising (ADV_IND)
-    uint8_t own_addr_type = 0; // Public Device Address
-    uint8_t peer_addr_type = 0; // Public Device Address
-    uint8_t peer_addr[6] = {0x80, 0x81, 0x82, 0x83, 0x84, 0x85};
-    uint8_t adv_chn_map = 0x07; // 37, 38, 39
-    uint8_t adv_filter_policy = 0; // Process All Conn and Scan
-
-    uint16_t sz = make_cmd_ble_set_scan_param(hci_cmd_buf,
-                  adv_intv_min,
-                  adv_intv_max,
-                  adv_type,
+   uint16_t sz = make_cmd_ble_set_scan_param(hci_cmd_buf,
+                  scan_type,
+                  scan_intv,
+                  scan_wndw,
                   own_addr_type,
-                  peer_addr_type,
-                  peer_addr,
-                  adv_chn_map,
-                  adv_filter_policy);
+                  scan_filter_policy);
     esp_vhci_host_send_packet(hci_cmd_buf, sz);
 }
 /***SET SCAN PARAMS... VVNX***/
