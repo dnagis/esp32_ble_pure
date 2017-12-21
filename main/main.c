@@ -38,19 +38,20 @@ static const char *MON_TAG = "BLE_PURE";
 #define HCI_GRP_BLE_CMDS                   (0x08 << 10)
 
 #define HCI_RESET                          (0x0003 | HCI_GRP_HOST_CONT_BASEBAND_CMDS)
-#define HCI_BLE_WRITE_ADV_ENABLE           (0x000A | HCI_GRP_BLE_CMDS)
+#define HCI_BLE_WRITE_ADV_ENABLE           (0x000A | HCI_GRP_BLE_CMDS)  //core specs p 1259
 #define HCI_BLE_WRITE_ADV_PARAMS           (0x0006 | HCI_GRP_BLE_CMDS)
 #define HCI_BLE_WRITE_ADV_DATA             (0x0008 | HCI_GRP_BLE_CMDS)
 #define HCI_BLE_WRITE_SCAN_RESP_DATA       (0x0009 | HCI_GRP_BLE_CMDS) //core specs HCI func specs p 1257
 
 #define HCI_BLE_WRITE_SCAN_PARAMS           (0x000B | HCI_GRP_BLE_CMDS) //core specs p 1261
-
+#define HCI_BLE_WRITE_SCAN_ENABLE           (0x000C | HCI_GRP_BLE_CMDS) //core specs p 1264
 
 #define HCIC_PARAM_SIZE_WRITE_ADV_ENABLE        (1)
 #define HCIC_PARAM_SIZE_BLE_WRITE_ADV_PARAMS    (15)
 #define HCIC_PARAM_SIZE_BLE_WRITE_ADV_DATA      (31)
 
 #define HCIC_PARAM_SIZE_BLE_WRITE_SCAN_PARAMS    (7) //somme des octets des command params
+#define HCIC_PARAM_SIZE_WRITE_SCAN_ENABLE        (2)
 
 #define BD_ADDR_LEN     (6)                     /* Device address length */
 typedef uint8_t bd_addr_t[BD_ADDR_LEN];         /* Device address */
@@ -210,7 +211,7 @@ static void hci_cmd_send_ble_set_adv_data(void)
     esp_vhci_host_send_packet(hci_cmd_buf, sz);
 }
 
-/***SCAN RESP... VVNX***/
+/***SET SCAN RESP... VVNX***/
 static uint16_t make_cmd_ble_set_scan_resp_data(uint8_t *buf, uint8_t data_len, uint8_t *p_data)
 {
     UINT8_TO_STREAM (buf, H4_TYPE_COMMAND);
@@ -249,7 +250,7 @@ static void hci_cmd_send_ble_set_scan_resp_data(void)
 	uint16_t sz = make_cmd_ble_set_scan_resp_data(hci_cmd_buf, adv_data_len, (uint8_t *)adv_data);
     esp_vhci_host_send_packet(hci_cmd_buf, sz);
 }
-/***SCAN RESP... VVNX***/
+/***SET SCAN RESP... VVNX***/
 
 /***SET SCAN PARAMS... VVNX***/
 static uint16_t make_cmd_ble_set_scan_param (uint8_t *buf, uint8_t scan_type, uint16_t scan_intv, uint16_t scan_wndw, 
@@ -285,6 +286,25 @@ static void hci_cmd_send_ble_set_scan_param(void)
 }
 /***SET SCAN PARAMS... VVNX***/
 
+/***SET SCAN ENABLE... VVNX***/
+static uint16_t make_cmd_ble_set_scan_enable (uint8_t *buf, uint8_t scan_enable, uint8_t filter_duplicates)
+{
+    UINT8_TO_STREAM (buf, H4_TYPE_COMMAND);
+    UINT16_TO_STREAM (buf, HCI_BLE_WRITE_SCAN_ENABLE);
+    UINT8_TO_STREAM  (buf, HCIC_PARAM_SIZE_WRITE_SCAN_ENABLE);
+    UINT8_TO_STREAM (buf, scan_enable);
+    UINT8_TO_STREAM (buf, filter_duplicates);
+    return HCI_H4_CMD_PREAMBLE_SIZE + HCIC_PARAM_SIZE_WRITE_SCAN_ENABLE;
+}
+
+static void hci_cmd_send_ble_scan_enable(void)
+{
+	uint8_t scan_enable = 1;
+	uint8_t filter_duplicates = 0;
+    uint16_t sz = make_cmd_ble_set_scan_enable (hci_cmd_buf, scan_enable, filter_duplicates);
+    esp_vhci_host_send_packet(hci_cmd_buf, sz);
+}
+/***SET SCAN ENABLE... VVNX***/
 /*
  * @brief: send HCI commands to perform BLE advertising;
  */
