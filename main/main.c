@@ -335,6 +335,7 @@ void bleAdvtTask(void *pvParameters)
 	hci_cmd_send_ble_set_scan_resp_data();
 	hci_cmd_send_ble_set_scan_param();
 	hci_cmd_send_ble_adv_start();
+	hci_cmd_send_ble_scan_enable();
 	vTaskDelay(600000 / portTICK_PERIOD_MS); //si je fais pas ça le bestiau redémarre tout le temps.... chiant
 }
 
