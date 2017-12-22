@@ -34,7 +34,7 @@ static const char *MON_TAG = "BLE_PURE";
 
 static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param)
 {
-	ESP_LOGI(MON_TAG, "On est dans la callback function to the gap module");
+	ESP_LOGI(MON_TAG, "On est dans la callback function to the gap module, event = %i", event);
 	
 }
 
