@@ -85,7 +85,7 @@ static void controller_rcv_pkt_ready(void)
  */
 static int host_rcv_pkt(uint8_t *data, uint16_t len)
 {
-    printf("host rcv pkt: ");
+    printf("host rcv pkt avec len=%i: ", len);
     for (uint16_t i = 0; i < len; i++) {
         printf("%02x", data[i]);
     }
@@ -330,11 +330,11 @@ void bleAdvtTask(void *pvParameters)
         printf("BLE Advertise, flag_send_avail: %d, cmd_sent: %d\n", send_avail, cmd_cnt);
     }*/
 	hci_cmd_send_reset();
-	hci_cmd_send_ble_set_adv_param();
-	hci_cmd_send_ble_set_adv_data();
-	hci_cmd_send_ble_set_scan_resp_data();
-	hci_cmd_send_ble_set_scan_param();
-	hci_cmd_send_ble_adv_start();
+	//hci_cmd_send_ble_set_adv_param();
+	//hci_cmd_send_ble_set_adv_data();
+	//hci_cmd_send_ble_set_scan_resp_data();
+	//hci_cmd_send_ble_adv_start();
+	hci_cmd_send_ble_set_scan_param();	
 	hci_cmd_send_ble_scan_enable();
 	vTaskDelay(600000 / portTICK_PERIOD_MS); //si je fais pas ça le bestiau redémarre tout le temps.... chiant
 }
