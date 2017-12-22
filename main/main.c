@@ -1,12 +1,16 @@
 /**
-*
-* J'arrive pas à récupérer les packets en lançant le scan direct en commandes HCI donc je passe
-* à la version: bluedroid/api/include/esp_gap_ble_api.h
+*BLE en mode minimaliste pour comprendre ce que je fais...
 * 
-* je me sers de spp_client_demo.c
+* examples/ble_adv me permet de faire de l'advertise en commandes HCI très 'raw'
+* le problème c'est que si je veux récupérer de l'info dans l'esp32 il faut que je scanne un peu pour avoir de la scan rsp
+* et là, faut que j'écoute... Et je vois pas comment faire pour écouter en hci raw. Du coup: 
+* 
+* j'utilise les defs dans: bluedroid/api/include/esp_gap_ble_api.h
+* 
+* je me sers de spp_client_demo.c comme point de départ.
 * 
 * 
- * 
+ * branch git: esp_gap_ble --> git push -u origin HEAD pour push chez github.
  */
 
 
@@ -34,23 +38,6 @@ static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *par
 	
 }
 
-
-void ble_client_appRegister(void)
-{
-    esp_err_t status;
-
-    ESP_LOGI(MON_TAG, "register callback");
-
-    //register the scan callback function to the gap module
-    if ((status = esp_ble_gap_register_callback(esp_gap_cb)) != ESP_OK) {
-        ESP_LOGE(MON_TAG, "gap register error, error code = %x", status);
-        return;
-    }
-    
-}
-
-
-
 void app_main()
 {
     esp_err_t ret;
@@ -63,7 +50,7 @@ void app_main()
         return;
     }
 
-    ret = esp_bt_controller_enable(ESP_BT_MODE_BTDM); //Now only support BTDM (components/bt/include/bt.h)
+    ret = esp_bt_controller_enable(ESP_BT_MODE_BTDM); //"Now only support BTDM" (components/bt/include/bt.h) donc si tu tentes BLE ça plante
     if (ret) {
         ESP_LOGE(MON_TAG, "%s enable controller failed\n", __func__);
         return;
@@ -81,8 +68,13 @@ void app_main()
         return;
     }
     
-    ble_client_appRegister();
-    ret = esp_ble_gap_start_scanning(60); //miracle, quand je mets ça ça passe enfin dans la callback: je reçois des packets!!! YEEEESSSSSSS
+    //register the scan callback function to the gap module
+    if ((ret = esp_ble_gap_register_callback(esp_gap_cb)) != ESP_OK) {
+        ESP_LOGE(MON_TAG, "gap register error, error code = %x", ret);
+        return;
+    }
+    
+    ret = esp_ble_gap_start_scanning(10); //lance le scan, la callback va être appelée quand de l'event arrive. Arg=duration en secondes
  
 }
 
