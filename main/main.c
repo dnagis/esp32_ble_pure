@@ -21,15 +21,33 @@
 #include "nvs_flash.h"
 #include "esp_bt_device.h"
 #include "esp_gap_ble_api.h"
-#include "esp_gattc_api.h"
-#include "esp_gatt_defs.h"
 #include "esp_bt_main.h"
 #include "esp_system.h"
 #include "btc_main.h"
-#include "esp_gatt_common_api.h"
 
 
 static const char *MON_TAG = "BLE_PURE";
+
+static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param)
+{
+	ESP_LOGI(MON_TAG, "On est dans la callback function to the gap module");
+	
+}
+
+
+void ble_client_appRegister(void)
+{
+    esp_err_t status;
+
+    ESP_LOGI(MON_TAG, "register callback");
+
+    //register the scan callback function to the gap module
+    if ((status = esp_ble_gap_register_callback(esp_gap_cb)) != ESP_OK) {
+        ESP_LOGE(MON_TAG, "gap register error, error code = %x", status);
+        return;
+    }
+    
+}
 
 
 
@@ -45,16 +63,16 @@ void app_main()
         return;
     }
 
-    ret = esp_bt_controller_enable(ESP_BT_MODE_BTDM);
+    ret = esp_bt_controller_enable(ESP_BT_MODE_BTDM); //Now only support BTDM (components/bt/include/bt.h)
     if (ret) {
         ESP_LOGE(MON_TAG, "%s enable controller failed\n", __func__);
         return;
     }
 
-    ESP_LOGI(MON_TAG, "%s init bluetooth\n", __func__);
+    ESP_LOGI(MON_TAG, "%s init bluetooth", __func__);
     ret = esp_bluedroid_init();
     if (ret) {
-        ESP_LOGE(MON_TAG, "%s init bluetooth failed\n", __func__);
+        ESP_LOGE(MON_TAG, "%s init bluetooth failed", __func__);
         return;
     }
     ret = esp_bluedroid_enable();
@@ -62,5 +80,9 @@ void app_main()
         ESP_LOGE(MON_TAG, "%s enable bluetooth failed\n", __func__);
         return;
     }
+    
+    ble_client_appRegister();
+    ret = esp_ble_gap_start_scanning(60); //miracle, quand je mets ça ça passe enfin dans la callback: je reçois des packets!!! YEEEESSSSSSS
+ 
 }
 
