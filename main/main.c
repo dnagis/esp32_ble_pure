@@ -40,6 +40,19 @@ static esp_ble_scan_params_t ble_scan_params = {
     .scan_window            = 0x30
 };
 
+static esp_ble_adv_params_t adv_params = {
+    .adv_int_min        = 0x20,
+    .adv_int_max        = 0x40,
+    .adv_type           = ADV_TYPE_IND,
+    .own_addr_type      = BLE_ADDR_TYPE_PUBLIC,
+    //.peer_addr            =
+    //.peer_addr_type       =
+    .channel_map        = ADV_CHNL_ALL,
+    .adv_filter_policy = ADV_FILTER_ALLOW_SCAN_ANY_CON_ANY
+};
+
+static uint8_t raw_adv_data[] = {0x02, 0x01, 0x06, 0x02, 0x0a, 0xeb, 0x03, 0x03, 0xab, 0xcd, 0xab, 0xcd, 0xee};
+
 static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param)
 {
 	esp_err_t ret;
@@ -67,7 +80,13 @@ static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *par
 		
 		ESP_LOGI(MON_TAG, "+++++++status = %i ", p_data->scan_param_cmpl.status); //esp_bt_status_t
 		
-		ret = esp_ble_gap_start_scanning(30);
+		ret = esp_ble_gap_start_scanning(30); //duration en s
+	}
+	
+	if (event == ESP_GAP_BLE_ADV_DATA_RAW_SET_COMPLETE_EVT) {
+		ESP_LOGI(MON_TAG, "c'est du ADV_DATA_RAW_SET_COMPLETE_EVT");
+			
+		ret = esp_ble_gap_start_advertising(&adv_params); //duration en s
 	}
 	
 }
@@ -76,7 +95,8 @@ void app_main()
 {
     esp_err_t ret;
     uint16_t taille_wl;
-    esp_bd_addr_t bda_wl = {81,82,83,84,85,86};
+    esp_bd_addr_t bda_wl = {0x81,0x82,0x83,0x84,0x85,0x86};
+    
     
     esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
 
@@ -99,6 +119,7 @@ void app_main()
         ESP_LOGE(MON_TAG, "%s init bluetooth failed", __func__);
         return;
     }
+    
     ret = esp_bluedroid_enable();
     if (ret) {
         ESP_LOGE(MON_TAG, "%s enable bluetooth failed\n", __func__);
@@ -116,12 +137,18 @@ void app_main()
 		ESP_LOGI(MON_TAG, "******retour de get wl sz AVANT update wl = %i avec ret = %i", taille_wl, ret);
 	ret = esp_ble_gap_update_whitelist(1, bda_wl); //bool add_remove, esp_bd_addr_t remote_bda
 		ESP_LOGI(MON_TAG, "******retour de update wl ret = %i", ret);
+		
 	//vTaskDelay(3000 / portTICK_PERIOD_MS); //en millisecondes
+	
 	ret = esp_ble_gap_get_whitelist_size(&taille_wl);
 		ESP_LOGI(MON_TAG, "******retour de get wl sz APRES update wl = %i avec ret = %i", taille_wl, ret);
     ret = esp_ble_gap_set_scan_params(&ble_scan_params);
 		ESP_LOGI(MON_TAG, "******retour de set scan param = %i", ret); //ESP_GAP_BLE_SCAN_PARAM_SET_COMPLETE_EVT généré
-    //ret = esp_ble_gap_start_scanning(30); //lance le scan, la callback va être appelée quand de l'event arrive. Arg=duration en secondes
+ 
+    
+
+    ret = esp_ble_gap_config_adv_data_raw(raw_adv_data, 13); //uint8_t *raw_data, uint32_t raw_data_len, va générer ESP_GAP_BLE_ADV_DATA_RAW_SET_COMPLETE_EVT
+ 
  
 }
 
