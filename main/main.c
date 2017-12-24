@@ -53,7 +53,11 @@ static esp_ble_adv_params_t adv_params = {
 
 static uint8_t raw_adv_data[] = {0x02, 0x01, 0x06, 0x02, 0x0a, 0xeb, 0x03, 0x03, 0xab, 0xcd, 0xab, 0xcd, 0xee};
 
-static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param)
+//static uint8_t raw_scan_rsp_data[] = {0x0f, 0x09, 0x45, 0x53, 0x50, 0x5f, 0x47, 0x41, 0x54, 0x54, 0x53, 0x5f, 0x44, 0x45, 0x4d, 0x4f};
+
+static uint8_t raw_scan_rsp_data[] = {0x0f, 0x09, 0x4c, 0x41, 0x52, 0x4f, 0x51, 0x55, 0x45};
+
+static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param) //ce que j'arrive pas à avoir en hci 'raw', écouter ce qui arrive...
 {
 	esp_err_t ret;
 	uint8_t *adv_data = NULL;
@@ -140,13 +144,13 @@ void app_main()
 		
 	//vTaskDelay(3000 / portTICK_PERIOD_MS); //en millisecondes
 	
-	ret = esp_ble_gap_get_whitelist_size(&taille_wl);
+	ret = esp_ble_gap_get_whitelist_size(&taille_wl); //pipi de chat, aucun effet. Idée au lieu de poster dans le forum: essayer en commandes 'raw hci'
 		ESP_LOGI(MON_TAG, "******retour de get wl sz APRES update wl = %i avec ret = %i", taille_wl, ret);
     ret = esp_ble_gap_set_scan_params(&ble_scan_params);
 		ESP_LOGI(MON_TAG, "******retour de set scan param = %i", ret); //ESP_GAP_BLE_SCAN_PARAM_SET_COMPLETE_EVT généré
  
     
-
+	ret = esp_ble_gap_config_scan_rsp_data_raw(raw_scan_rsp_data, 9); //uint8_t *raw_data, uint32_t raw_data_len, devrait générer ESP_GAP_BLE_SCAN_RSP_DATA_RAW_SET_COMPLETE_EVT
     ret = esp_ble_gap_config_adv_data_raw(raw_adv_data, 13); //uint8_t *raw_data, uint32_t raw_data_len, va générer ESP_GAP_BLE_ADV_DATA_RAW_SET_COMPLETE_EVT
  
  
