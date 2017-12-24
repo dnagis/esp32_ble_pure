@@ -138,5 +138,6 @@ void app_main()
     ret = esp_ble_gap_config_adv_data_raw(raw_adv_data, 13); //uint8_t *raw_data, uint32_t raw_data_len, will generate ESP_GAP_BLE_ADV_DATA_RAW_SET_COMPLETE_EVT
  
  
+ 
 }
 
