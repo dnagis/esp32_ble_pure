@@ -61,18 +61,27 @@ static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *par
 	uint8_t *adv_data = NULL;
 	
 	esp_ble_gap_cb_param_t *p_data = (esp_ble_gap_cb_param_t *) param;
-	ESP_LOGI(MY_TAG, "We're in the cb func to the gap module, event = %x", event); //event types: see esp_gap_ble_api.h
+	//ESP_LOGI(MY_TAG, "We're in the cb func to the gap module, event = %x", event); //event types: see esp_gap_ble_api.h
 	
 	if (event == ESP_GAP_BLE_SCAN_RESULT_EVT) {		
-				esp_log_buffer_hex(MY_TAG, param->scan_rst.bda, sizeof(esp_bd_addr_t)); //bdaddr
+		//éviter de polluer le log avec des advertisers qui font chier
+		int ret;
+		esp_bd_addr_t crap_bdaddr = {0xfc, 0xf1, 0x36, 0x28, 0x15, 0x1c}; //une bdaddr qui fait chier
+		ret = memcmp(crap_bdaddr, param->scan_rst.bda, 6);
+		//ESP_LOGI(MY_TAG, "retour de memcmp=%i", ret); //juste pour debug...
+		
+		if (ret != 0) {
+		esp_log_buffer_hex(MY_TAG, param->scan_rst.bda, sizeof(esp_bd_addr_t)); //log bdaddr
 		ESP_LOGI(MY_TAG, "SCAN_RESULT_EVT of type %x", p_data->scan_rst.ble_evt_type);
 		ESP_LOGI(MY_TAG, "adv_data_len = %i", p_data->scan_rst.adv_data_len);
+		ESP_LOGI(MY_TAG, "scan_rsp_len = %i", p_data->scan_rst.scan_rsp_len);
 		adv_data = p_data->scan_rst.ble_adv;
             printf("data: ");
-            for (int j = 0; j < p_data->scan_rst.adv_data_len; j++) {
+            for (int j = 0; j < (p_data->scan_rst.adv_data_len + p_data->scan_rst.scan_rsp_len); j++) {
                 printf("%02x ", adv_data[j]);
             }
             printf("\n");
+        }
 	}
 	
 	if (event == ESP_GAP_BLE_SCAN_PARAM_SET_COMPLETE_EVT) {
