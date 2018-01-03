@@ -101,12 +101,23 @@ static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *par
 
 void app_main()
 {
-    esp_err_t ret;
-    
+    esp_err_t status;
+
+	// Initialize NVS flash storage with layout given in the partition table
+	esp_err_t ret = nvs_flash_init();
+	if (ret == ESP_ERR_NVS_NO_FREE_PAGES) 
+	{
+		ESP_ERROR_CHECK(nvs_flash_erase());
+		ret = nvs_flash_init();
+	}
+	ESP_ERROR_CHECK( ret );
+
+	ESP_LOGI(MY_TAG, "Enabling Bluetooth Controller");
     
     esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
 
-    nvs_flash_init();
+    
+    
     ret = esp_bt_controller_init(&bt_cfg);
     if (ret) {
         ESP_LOGE(MY_TAG, "%s enable controller failed\n", __func__);
