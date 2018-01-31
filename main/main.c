@@ -1,5 +1,5 @@
 /**
-*BLE en mode minimaliste pour comprendre ce que je fais...
+*BLE en mode minimaliste basé sur scan/advertise sans se faire chier avec des connexions...
 * 
 * examples/ble_adv me permet de faire de l'advertise en commandes HCI très 'raw'
 * le problème c'est que si je veux récupérer de l'info dans l'esp32 il faut que je scanne un peu pour avoir de la scan rsp
@@ -29,6 +29,7 @@
 #include "esp_system.h"
 #include "btc_main.h"
 
+#include "driver/gpio.h"
 
 static const char *MY_TAG = "BLE_PURE";
 
@@ -61,12 +62,12 @@ static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *par
 	uint8_t *adv_data = NULL;
 	
 	esp_ble_gap_cb_param_t *p_data = (esp_ble_gap_cb_param_t *) param;
-	//ESP_LOGI(MY_TAG, "We're in the cb func to the gap module, event = %x", event); //event types: see esp_gap_ble_api.h
+	ESP_LOGI(MY_TAG, "We're in the cb func to the gap module, event = %x", event); //event types: see esp_gap_ble_api.h
 	
 	if (event == ESP_GAP_BLE_SCAN_RESULT_EVT) {		
 		//CHeck de bdaddr pour restreindre une action (exple: interrupteur), ou éviter de polluer le log avec des advertisers qui font chier
 		int ret;
-		esp_bd_addr_t une_bdaddr = {0x00, 0xc2, 0xc6, 0xd1, 0xe8, 0x44}; //une bdaddr qui fait chier format:{0xfc, 0xf1, 0x36, 0x28, 0x15, 0x1c}
+		esp_bd_addr_t une_bdaddr = {0x00, 0xc2, 0xc6, 0xd1, 0xe8, 0x44}; //une bdaddr au format:{0xfc, 0xf1, 0x36, 0x28, 0x15, 0x1c}
 		ret = memcmp(une_bdaddr, param->scan_rst.bda, 6); //si ret == 0 la bdaddr de cet evt est la même
 		//ESP_LOGI(MY_TAG, "retour de memcmp=%i", ret); //juste pour debug...
 		
@@ -83,9 +84,13 @@ static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *par
             printf("\n");
         ESP_LOGI(MY_TAG, "le 10ème byte = %i", adv_data[10]); //conversion en bash: echo $((16#aa))  -->  170
         if (adv_data[10] == 170) {
-			/**Du code quand la bonne bdaddr et le bon byte à l'endroit où tu l'attends (exple: interrupteur chauffage)**/
-			ESP_LOGI(MY_TAG, "YEEESSSS");
-            
+				/**Du code quand la bonne bdaddr et le bon byte à l'endroit où tu l'attends (exple: interrupteur chauffage)**/
+				ESP_LOGI(MY_TAG, "Test de l'adv data: trouvé ce que je cherche...");
+				gpio_set_direction(GPIO_NUM_4, GPIO_MODE_OUTPUT);
+				gpio_set_level(GPIO_NUM_4, 1);            
+			}  else {
+				ESP_LOGI(MY_TAG, "Test de l'adv data: pas trouvé ce que je cherche...");
+				gpio_set_level(GPIO_NUM_4, 0);	
 			}
         
         }
@@ -95,7 +100,7 @@ static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *par
 		ESP_LOGI(MY_TAG, "it's a SCAN_PARAM_SET_COMPLETE_EVT");		
 		ESP_LOGI(MY_TAG, "+++++++status = %i ", p_data->scan_param_cmpl.status); //esp_bt_status_t
 		
-		ret = esp_ble_gap_start_scanning(200); //duration in s
+		ret = esp_ble_gap_start_scanning(10); //duration in s
 	}
 	
 	if (event == ESP_GAP_BLE_ADV_DATA_RAW_SET_COMPLETE_EVT) {
@@ -121,9 +126,7 @@ void app_main()
 
 	ESP_LOGI(MY_TAG, "Enabling Bluetooth Controller");
     
-    esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
-
-    
+    esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();    
     
     ret = esp_bt_controller_init(&bt_cfg);
     if (ret) {
@@ -156,13 +159,16 @@ void app_main()
         return;
     }
     
-    
-    ret = esp_ble_gap_set_scan_params(&ble_scan_params);
+    //lance le scan dans un loop, car dans les params du scan tu dis combien de temps il scanne, et c'est pas infini
+    while( true ) {
+	    ret = esp_ble_gap_set_scan_params(&ble_scan_params);
 		ESP_LOGI(MY_TAG, "******set scan param returns = %i", ret); //will generate ESP_GAP_BLE_SCAN_PARAM_SET_COMPLETE_EVT
- 
+		vTaskDelay(15000/portTICK_PERIOD_MS); //millisecondes
+	}
     
-	ret = esp_ble_gap_config_scan_rsp_data_raw(raw_scan_rsp_data, 9); //uint8_t *raw_data, uint32_t raw_data_len, will generate ESP_GAP_BLE_SCAN_RSP_DATA_RAW_SET_COMPLETE_EVT
-    ret = esp_ble_gap_config_adv_data_raw(raw_adv_data, 13); //uint8_t *raw_data, uint32_t raw_data_len, will generate ESP_GAP_BLE_ADV_DATA_RAW_SET_COMPLETE_EVT
+    /**Si tu veux advertiser / émettre une scan rsp**/
+	//ret = esp_ble_gap_config_scan_rsp_data_raw(raw_scan_rsp_data, 9); //uint8_t *raw_data, uint32_t raw_data_len, will generate ESP_GAP_BLE_SCAN_RSP_DATA_RAW_SET_COMPLETE_EVT
+    //ret = esp_ble_gap_config_adv_data_raw(raw_adv_data, 13); //uint8_t *raw_data, uint32_t raw_data_len, will generate ESP_GAP_BLE_ADV_DATA_RAW_SET_COMPLETE_EVT
  
  
  
