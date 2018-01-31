@@ -64,13 +64,13 @@ static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *par
 	//ESP_LOGI(MY_TAG, "We're in the cb func to the gap module, event = %x", event); //event types: see esp_gap_ble_api.h
 	
 	if (event == ESP_GAP_BLE_SCAN_RESULT_EVT) {		
-		//éviter de polluer le log avec des advertisers qui font chier
+		//CHeck de bdaddr pour restreindre une action (exple: interrupteur), ou éviter de polluer le log avec des advertisers qui font chier
 		int ret;
-		esp_bd_addr_t crap_bdaddr = {0xfc, 0xf1, 0x36, 0x28, 0x15, 0x1c}; //une bdaddr qui fait chier
-		ret = memcmp(crap_bdaddr, param->scan_rst.bda, 6);
+		esp_bd_addr_t une_bdaddr = {0x00, 0xc2, 0xc6, 0xd1, 0xe8, 0x44}; //une bdaddr qui fait chier format:{0xfc, 0xf1, 0x36, 0x28, 0x15, 0x1c}
+		ret = memcmp(une_bdaddr, param->scan_rst.bda, 6); //si ret == 0 la bdaddr de cet evt est la même
 		//ESP_LOGI(MY_TAG, "retour de memcmp=%i", ret); //juste pour debug...
 		
-		if (ret != 0) {
+		if (ret == 0) { /**If bdaddr=une_bdaddr**/
 		esp_log_buffer_hex(MY_TAG, param->scan_rst.bda, sizeof(esp_bd_addr_t)); //log bdaddr
 		ESP_LOGI(MY_TAG, "SCAN_RESULT_EVT of type %x", p_data->scan_rst.ble_evt_type);
 		ESP_LOGI(MY_TAG, "adv_data_len = %i", p_data->scan_rst.adv_data_len);
@@ -81,6 +81,13 @@ static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *par
                 printf("%02x ", adv_data[j]);
             }
             printf("\n");
+        ESP_LOGI(MY_TAG, "le 10ème byte = %i", adv_data[10]); //conversion en bash: echo $((16#aa))  -->  170
+        if (adv_data[10] == 170) {
+			/**Du code quand la bonne bdaddr et le bon byte à l'endroit où tu l'attends (exple: interrupteur chauffage)**/
+			ESP_LOGI(MY_TAG, "YEEESSSS");
+            
+			}
+        
         }
 	}
 	
