@@ -76,7 +76,7 @@ static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *par
 	if (event == ESP_GAP_BLE_SCAN_RESULT_EVT) {		
 		//CHeck de bdaddr pour restreindre une action (exple: interrupteur), ou éviter de polluer le log avec des advertisers qui font chier
 		int ret;
-		esp_bd_addr_t une_bdaddr = {0x00, 0xc2, 0xc6, 0xd1, 0xe8, 0x44}; //une bdaddr au format:{0xfc, 0xf1, 0x36, 0x28, 0x15, 0x1c}
+		esp_bd_addr_t une_bdaddr = {0x14, 0x4f, 0x8a, 0x06, 0xc7, 0xea}; //une bdaddr au format:{0xfc, 0xf1, 0x36, 0x28, 0x15, 0x1c}
 		ret = memcmp(une_bdaddr, param->scan_rst.bda, 6); //si ret == 0 la bdaddr de cet evt est la même
 		//ESP_LOGI(MY_TAG, "retour de memcmp=%i", ret); //juste pour debug...
 		
@@ -139,13 +139,16 @@ void app_main()
     
     ret = esp_bt_controller_init(&bt_cfg);
     if (ret) {
-        ESP_LOGE(MY_TAG, "%s enable controller failed\n", __func__);
+        ESP_LOGE(MY_TAG, "%s init controller failed\n", __func__);
         return;
     }
 
-    ret = esp_bt_controller_enable(ESP_BT_MODE_BTDM); //"Now only support BTDM" (components/bt/include/bt.h) donc si tu tentes BLE ça plante
+	//Peut poser pb:
+	//2018: "Now only support BTDM" (components/bt/include/bt.h) donc je tentais BLE ça plantait
+	//2019: ya que ESP_BT_MODE_BLE qui passe, va comprendre....
+    ret = esp_bt_controller_enable(ESP_BT_MODE_BLE);
     if (ret) {
-        ESP_LOGE(MY_TAG, "%s enable controller failed\n", __func__);
+        ESP_LOGE(MY_TAG, "%s Enable controller failed\n", __func__);
         return;
     }
 
