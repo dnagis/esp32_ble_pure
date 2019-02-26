@@ -1,4 +1,8 @@
 /**
+ * 
+ * Ne pas oublier d'activer le BT en menuconfig +++++
+ * 
+ * 
 *BLE en mode minimaliste basé sur scan/advertise sans se faire chier avec des connexions...
 * 
 * examples/ble_adv me permet de faire de l'advertise en commandes HCI très 'raw'
@@ -18,18 +22,23 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include "controller.h"
+
 #include "driver/uart.h"
 
-#include "bt.h"
+#include "esp_bt.h"
 #include "nvs_flash.h"
 #include "esp_bt_device.h"
 #include "esp_gap_ble_api.h"
 #include "esp_bt_main.h"
 #include "esp_system.h"
-#include "btc_main.h"
+
+#include "esp_log.h"
 
 #include "driver/gpio.h"
+
+//marche plus début 2019
+//#include "controller.h"
+//#include "btc_main.h"
 
 static const char *MY_TAG = "BLE_PURE";
 
