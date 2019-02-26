@@ -45,7 +45,7 @@ static const char *MY_TAG = "BLE_PURE";
 static esp_ble_scan_params_t ble_scan_params = {
     .scan_type              = BLE_SCAN_TYPE_ACTIVE,
     .own_addr_type          = BLE_ADDR_TYPE_PUBLIC,
-    .scan_filter_policy     = BLE_SCAN_FILTER_ALLOW_ALL,
+    .scan_filter_policy     = BLE_SCAN_FILTER_ALLOW_ONLY_WLST,
     .scan_interval          = 0x50,
     .scan_window            = 0x30
 };
@@ -65,6 +65,8 @@ static uint8_t raw_adv_data[] = {0x02, 0x01, 0x06, 0x02, 0x0a, 0xeb, 0x03, 0x03,
 
 static uint8_t raw_scan_rsp_data[] = {0x0f, 0x09, 0x4c, 0x41, 0x52, 0x4f, 0x51, 0x55, 0x45};
 
+esp_bd_addr_t bdaddr_wl = {0xb8, 0x27, 0xeb, 0x01, 0x8e, 0x0b};
+
 static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param)
 {
 	esp_err_t ret;
@@ -74,25 +76,19 @@ static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *par
 	ESP_LOGI(MY_TAG, "We're in the cb func to the gap module, event = %x", event); //event types: see esp_gap_ble_api.h
 	
 	if (event == ESP_GAP_BLE_SCAN_RESULT_EVT) {		
-		//CHeck de bdaddr pour restreindre une action (exple: interrupteur), ou éviter de polluer le log avec des advertisers qui font chier
-		int ret;
-		esp_bd_addr_t une_bdaddr = {0x14, 0x4f, 0x8a, 0x06, 0xc7, 0xea}; //une bdaddr au format:{0xfc, 0xf1, 0x36, 0x28, 0x15, 0x1c}
-		ret = memcmp(une_bdaddr, param->scan_rst.bda, 6); //si ret == 0 la bdaddr de cet evt est la même
-		//ESP_LOGI(MY_TAG, "retour de memcmp=%i", ret); //juste pour debug...
-		
-		if (ret == 0) { /**If bdaddr=une_bdaddr**/
+
 		esp_log_buffer_hex(MY_TAG, param->scan_rst.bda, sizeof(esp_bd_addr_t)); //log bdaddr
 		ESP_LOGI(MY_TAG, "SCAN_RESULT_EVT of type %x", p_data->scan_rst.ble_evt_type);
 		ESP_LOGI(MY_TAG, "adv_data_len = %i", p_data->scan_rst.adv_data_len);
 		ESP_LOGI(MY_TAG, "scan_rsp_len = %i", p_data->scan_rst.scan_rsp_len);
 		adv_data = p_data->scan_rst.ble_adv;
-            printf("data: ");
-            for (int j = 0; j < (p_data->scan_rst.adv_data_len + p_data->scan_rst.scan_rsp_len); j++) {
-                printf("%02x ", adv_data[j]);
-            }
-            printf("\n");
-        ESP_LOGI(MY_TAG, "le 10ème byte = %i", adv_data[10]); //conversion en bash: echo $((16#aa))  -->  170
-        if (adv_data[10] == 170) {
+			printf("data: ");
+			for (int j = 0; j < (p_data->scan_rst.adv_data_len + p_data->scan_rst.scan_rsp_len); j++) {
+				printf("%02x ", adv_data[j]);
+			}
+			printf("\n");
+		ESP_LOGI(MY_TAG, "le 10ème byte = %i", adv_data[10]); //conversion en bash: echo $((16#aa))  -->  170
+		if (adv_data[10] == 170) {
 				/**Du code quand la bonne bdaddr et le bon byte à l'endroit où tu l'attends (exple: interrupteur chauffage)**/
 				ESP_LOGI(MY_TAG, "Test de l'adv data: trouvé ce que je cherche...");
 				gpio_set_direction(GPIO_NUM_4, GPIO_MODE_OUTPUT);
@@ -102,7 +98,7 @@ static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *par
 				gpio_set_level(GPIO_NUM_4, 0);	
 			}
         
-        }
+        
 	}
 	
 	if (event == ESP_GAP_BLE_SCAN_PARAM_SET_COMPLETE_EVT) {
@@ -170,6 +166,13 @@ void app_main()
         ESP_LOGE(MY_TAG, "gap register error, error code = %x", ret);
         return;
     }
+    
+    if ((ret = esp_ble_gap_update_whitelist(true, bdaddr_wl)) != ESP_OK) {
+        ESP_LOGE(MY_TAG, "gap update whitelist error, error code = %x", ret);
+        return;
+    }
+    
+    
     
     //lance le scan dans un loop, car dans les params du scan tu dis combien de temps il scanne, et c'est pas infini
     while( true ) {
