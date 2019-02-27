@@ -65,7 +65,7 @@ static uint8_t raw_adv_data[] = {0x02, 0x01, 0x06, 0x02, 0x0a, 0xeb, 0x03, 0x03,
 
 static uint8_t raw_scan_rsp_data[] = {0x0f, 0x09, 0x4c, 0x41, 0x52, 0x4f, 0x51, 0x55, 0x45};
 
-esp_bd_addr_t bdaddr_wl = {0xb8, 0x27, 0xeb, 0x01, 0x8e, 0x0b};
+esp_bd_addr_t bdaddr_wl = {0xb8, 0x27, 0xeb, 0x6d, 0x03, 0x70};//B8:27:EB:6D:03:70
 
 static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param)
 {
@@ -75,7 +75,8 @@ static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *par
 	esp_ble_gap_cb_param_t *p_data = (esp_ble_gap_cb_param_t *) param;
 	ESP_LOGI(MY_TAG, "We're in the cb func to the gap module, event = %x", event); //event types: see esp_gap_ble_api.h
 	
-	if (event == ESP_GAP_BLE_SCAN_RESULT_EVT) {		
+	//super moche ce if du premier byte de la bdaddr mais le whitelisting ne marche pas...
+	if (event == ESP_GAP_BLE_SCAN_RESULT_EVT && param->scan_rst.bda[0] == 0xb8 ) {		
 
 		esp_log_buffer_hex(MY_TAG, param->scan_rst.bda, sizeof(esp_bd_addr_t)); //log bdaddr
 		ESP_LOGI(MY_TAG, "SCAN_RESULT_EVT of type %x", p_data->scan_rst.ble_evt_type);
