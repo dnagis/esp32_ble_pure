@@ -39,6 +39,7 @@
 //marche plus début 2019
 //#include "controller.h"
 //#include "btc_main.h"
+#define GPIO_PILOT 4
 
 static const char *MY_TAG = "BLE_PURE";
 
@@ -89,14 +90,15 @@ static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *par
 			}
 			printf("\n");
 		ESP_LOGI(MY_TAG, "le 10ème byte = %i", adv_data[10]); //conversion en bash: echo $((16#aa))  -->  170
+		gpio_pad_select_gpio(GPIO_PILOT);
+		gpio_set_direction(GPIO_PILOT, GPIO_MODE_OUTPUT);
 		if (adv_data[10] == 170) {
 				/**Du code quand la bonne bdaddr et le bon byte à l'endroit où tu l'attends (exple: interrupteur chauffage)**/
-				ESP_LOGI(MY_TAG, "Test de l'adv data: trouvé ce que je cherche...");
-				gpio_set_direction(GPIO_NUM_4, GPIO_MODE_OUTPUT);
-				gpio_set_level(GPIO_NUM_4, 1);            
+				ESP_LOGI(MY_TAG, "Test de l'adv data: trouvé ce que je cherche...");				
+				gpio_set_level(GPIO_PILOT, 1);            
 			}  else {
 				ESP_LOGI(MY_TAG, "Test de l'adv data: pas trouvé ce que je cherche...");
-				gpio_set_level(GPIO_NUM_4, 0);	
+				gpio_set_level(GPIO_PILOT, 0);	
 			}
         
         
