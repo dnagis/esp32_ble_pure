@@ -170,7 +170,8 @@ void app_main()
         return;
     }
     
-    if ((ret = esp_ble_gap_update_whitelist(true, bdaddr_wl)) != ESP_OK) {
+    //aout 2019 ca a changé https://docs.espressif.com/projects/esp-idf/en/latest/api-reference/bluetooth/esp_gap_ble.html
+    if ((ret = esp_ble_gap_update_whitelist(true, bdaddr_wl, BLE_WL_ADDR_TYPE_PUBLIC)) != ESP_OK) {
         ESP_LOGE(MY_TAG, "gap update whitelist error, error code = %x", ret);
         return;
     }
